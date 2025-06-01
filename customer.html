@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ta Ta Ta シフォンケーキ スタンプカード</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
+<style>
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    background: #fff8f0;
+    color: #4b2e05;
+    padding: 16px;
+    max-width: 480px;
+    margin: auto;
+  }
+  h1 {
+    text-align: center;
+    margin-bottom: 24px;
+    font-weight: 700;
+  }
+  #stamps {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .stamp {
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    border-radius: 8px;
+    border: 2px solid #d2691e;
+    font-size: 24px;
+    color: #d2691e;
+    text-align: center;
+    user-select: none;
+    background: #fff;
+    box-shadow: 0 0 6px rgba(210,105,30,0.3);
+  }
+  .stamp.filled {
+    background-color: #d2691e;
+    color: white;
+    box-shadow: 0 0 10px #d2691e;
+  }
+  #message {
+    text-align: center;
+    font-weight: 600;
+    color: #a45100;
+    margin-bottom: 20px;
+    min-height: 28px;
+  }
+  #reader {
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto 20px auto;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgb(0 0 0 / 0.15);
+  }
+  #manual-input {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 30px;
+  }
+  #manual-input input {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 2px solid #d2691e;
+    font-size: 16px;
+  }
+  #manual-input button {
+    background-color: #d2691e;
+    border: none;
+    color: white;
+    padding: 10px 18px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.25s ease;
+  }
+  #manual-input button:hover {
+    background-color: #b55a15;
+  }
+  @media (max-width: 400px) {
+    #manual-input {
+      flex-direction: column;
+    }
+    #manual-input button {
+      width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+  <h1>Ta Ta Ta シフォンケーキ<br>スタンプカード</h1>
+  <div id="message"></div>
+  <div id="stamps"></div>
+
+  <div id="reader"></div>
+
+  <div id="manual-input">
+    <input type="text" id="token-input" placeholder="スタッフからのコードを入力" maxlength="8" />
+    <button id="btn-apply">スタンプ追加</button>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+<script>
+  const MAX_STAMPS = 10;
+
+  let stamps = parseInt(localStorage.getItem('tata_stamps') || '0', 10);
+
+  const messageEl = document.getElementById('message');
+  const stampsEl = document.getElementById('stamps');
+
+  // スタンプの表示更新
+  function renderStamps() {
+    stampsEl.innerHTML = '';
+    for(let i = 1; i <= MAX_STAMPS; i++) {
+      const div = document.createElement('div');
+      div.className = 'stamp' + (i <= stamps ? ' filled' : '');
+      div.textContent = i <= stamps ? '★' : i;
+      stampsEl.appendChild(div);
+    }
+  }
+
+  // メッセージ更新
+  function updateMessage() {
+    if(stamps >= MAX_STAMPS) {
+      messageEl.textContent = '🎉 スタンプ10個でケーキ1つ無料！おめでとうございます！';
+    } else {
+      messageEl.textContent = '';
+    }
+  }
+
+  // スタンプを増やす
+  function addStamp() {
+    if(stamps < MAX_STAMPS) {
+      stamps++;
+      localStorage.setItem('tata_stamps', stamps);
+      renderStamps();
+      updateMessage();
+    }
+  }
+
+  // トークンの検証（簡単に、8桁の数字で合計が偶数ならOK とか）
+  function validateToken(token) {
+    if(!/^\d{8}$/.test(token)) return false;
+    // 簡単なチェック：数字8桁の合計が偶数ならOK
+    const sum = token.split('').reduce((acc,c) => acc + Number(c), 0);
+    return sum % 2 === 0;
+  }
+
+  // QRコード成功時のコールバック
+  function onScanSuccess(decodedText, decodedResult) {
+    if(validateToken(decodedText)) {
+      addStamp();
+      messageEl.textContent = '✅ QRコード認証成功！スタンプを1つ追加しました。';
+    } else {
+      messageEl.textContent = '❌ 認証に失敗しました。スタッフから正しいコードをもらってね。';
+    }
+    // QRコード読み取りを停止して、再起動は手動で
+    html5QrcodeScanner.clear();
+  }
+
+  // QRコード読み取りの初期化
+  const html5QrcodeScanner = new Html5Qrcode("reader");
+  Html5Qrcode.getCameras().then(cameras => {
+    if(cameras && cameras.length) {
+      const cameraId = cameras[0].id;
+      html5QrcodeScanner.start(
+        cameraId,
+        {
+          fps: 10,
+          qrbox: 250
+        },
+        onScanSuccess,
+        (errorMessage) => {
+          // 失敗は無視でOK
+        }
+      );
+    } else {
+      messageEl.textContent = 'カメラが見つかりません。手動入力をご利用ください。';
+    }
+  }).catch(err => {
+    messageEl.textContent = 'カメラの起動に失敗しました。手動入力をご利用ください。';
+  });
+
+  // 手動入力の処理
+  document.getElementById('btn-apply').addEventListener('click', () => {
+    const token = document.getElementById('token-input').value.trim();
+    if(validateToken(token)) {
+      addStamp();
+      messageEl.textContent = '✅ コード認証成功！スタンプを1つ追加しました。';
+      document.getElementById('token-input').value = '';
+    } else {
+      messageEl.textContent = '❌ 無効なコードです。もう一度確認してください。';
+    }
+  });
+
+  renderStamps();
+  updateMessage();
+</script>
+</body>
+</html>
