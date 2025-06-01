@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ta Ta Ta スタッフ用トークン生成</title>
+<style>
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    background: #fef8f0;
+    color: #4b2e05;
+    max-width: 400px;
+    margin: 2em auto;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(210,105,30,0.2);
+    user-select: none;
+  }
+  h1 {
+    text-align: center;
+    color: #d2691e;
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+  }
+  label {
+    display: block;
+    margin: 1rem 0 0.5rem 0;
+    font-weight: 600;
+  }
+  input[type="password"],
+  input[type="text"] {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 1rem;
+    border: 2px solid #d2691e;
+    border-radius: 6px;
+    outline-offset: 2px;
+    transition: border-color 0.3s ease;
+  }
+  input[type="password"]:focus,
+  input[type="text"]:focus {
+    border-color: #a0522d;
+  }
+  button {
+    margin-top: 1.5rem;
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    background: #d2691e;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  button:hover:not(:disabled) {
+    background: #a0522d;
+  }
+  button:disabled {
+    background: #e0c9b0;
+    cursor: not-allowed;
+  }
+  #result {
+    margin-top: 2rem;
+    text-align: center;
+    word-break: break-all;
+  }
+  #qr {
+    margin: 1rem auto 0;
+    width: 180px;
+    height: 180px;
+  }
+  #error {
+    margin-top: 1rem;
+    color: #b22222;
+    font-weight: 700;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<h1>Ta Ta Ta スタッフ用 トークン生成</h1>
+
+<label for="password">スタッフパスワードを入力</label>
+<input type="password" id="password" placeholder="パスワード" autocomplete="off" />
+
+<label for="tokenInput" style="display:none;">トークンを入力</label>
+<input type="text" id="tokenInput" placeholder="数字のトークンを入力" autocomplete="off" style="display:none;" />
+
+<button id="generateBtn" disabled style="display:none;">URL と QRコードを生成</button>
+
+<div id="error"></div>
+
+<div id="result"></div>
+<div id="qr"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<script>
+  const correctPassword = '3187913';
+
+  const passwordInput = document.getElementById('password');
+  const tokenInput = document.getElementById('tokenInput');
+  const generateBtn = document.getElementById('generateBtn');
+  const errorDiv = document.getElementById('error');
+  const resultDiv = document.getElementById('result');
+  const qrDiv = document.getElementById('qr');
+
+  // パスワード認証
+  passwordInput.addEventListener('input', () => {
+    if(passwordInput.value === correctPassword) {
+      errorDiv.textContent = '';
+      tokenInput.style.display = 'block';
+      generateBtn.style.display = 'block';
+      tokenInput.previousElementSibling.style.display = 'block'; // label表示
+      generateBtn.disabled = true;
+      resultDiv.textContent = '';
+      qrDiv.innerHTML = '';
+    } else {
+      tokenInput.style.display = 'none';
+      generateBtn.style.display = 'none';
+      tokenInput.previousElementSibling.style.display = 'none';
+      errorDiv.textContent = passwordInput.value ? 'パスワードが違います' : '';
+      resultDiv.textContent = '';
+      qrDiv.innerHTML = '';
+    }
+  });
+
+  // トークン入力のバリデーション
+  tokenInput.addEventListener('input', () => {
+    const val = tokenInput.value.trim();
+    generateBtn.disabled = !/^\d{8,}$/.test(val); // 8桁以上の数字だけ有効
+    errorDiv.textContent = '';
+  });
+
+  // 生成ボタン押下
+  generateBtn.addEventListener('click', () => {
+    const token = tokenInput.value.trim();
+    const url = `https://nekomimi0128.github.io/tatata/customer?token=${encodeURIComponent(token)}`;
+
+    resultDiv.textContent = url;
+    qrDiv.innerHTML = '';
+    QRCode.toCanvas(qrDiv, url, { width: 180, color: { dark: '#d2691e', light: '#fff8f0' } }, function (error) {
+      if (error) {
+        errorDiv.textContent = 'QRコード生成に失敗しました';
+        console.error(error);
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
