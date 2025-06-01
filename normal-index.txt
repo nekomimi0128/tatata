@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="refresh" content="0; URL=customer.html" />
+  </head>
+  <body>
+    リダイレクト中...
+  </body>
+</html>
