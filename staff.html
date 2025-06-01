@@ -28,8 +28,7 @@
     margin: 1rem 0 0.5rem 0;
     font-weight: 600;
   }
-  input[type="password"],
-  input[type="text"] {
+  input[type="password"] {
     width: 100%;
     padding: 0.5rem;
     font-size: 1rem;
@@ -38,8 +37,7 @@
     outline-offset: 2px;
     transition: border-color 0.3s ease;
   }
-  input[type="password"]:focus,
-  input[type="text"]:focus {
+  input[type="password"]:focus {
     border-color: #a0522d;
   }
   button {
@@ -87,63 +85,72 @@
 <label for="password">スタッフパスワードを入力</label>
 <input type="password" id="password" placeholder="パスワード" autocomplete="off" />
 
-<label for="tokenInput" style="display:none;">トークンを入力</label>
-<input type="text" id="tokenInput" placeholder="数字のトークンを入力" autocomplete="off" style="display:none;" />
-
-<button id="generateBtn" disabled style="display:none;">URL と QRコードを生成</button>
+<button id="generateBtn" disabled>トークン生成</button>
 
 <div id="error"></div>
-
 <div id="result"></div>
 <div id="qr"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 <script>
   const correctPassword = '3187913';
-
   const passwordInput = document.getElementById('password');
-  const tokenInput = document.getElementById('tokenInput');
   const generateBtn = document.getElementById('generateBtn');
   const errorDiv = document.getElementById('error');
   const resultDiv = document.getElementById('result');
   const qrDiv = document.getElementById('qr');
 
-  // パスワード認証
+  // Luhnアルゴリズムでチェック桁を付ける
+  function luhnChecksum(numStr) {
+    let sum = 0;
+    let alt = false;
+    for(let i = numStr.length - 1; i >= 0; i--) {
+      let n = parseInt(numStr[i], 10);
+      if (alt) {
+        n *= 2;
+        if(n > 9) n -= 9;
+      }
+      sum += n;
+      alt = !alt;
+    }
+    return sum % 10;
+  }
+  function generateLuhnToken(length=8) {
+    // length-1桁のランダム数字を作ってチェック桁を付ける
+    let base = '';
+    for(let i=0; i<length-1; i++) {
+      base += Math.floor(Math.random() * 10);
+    }
+    let checkDigit = (10 - luhnChecksum(base + '0')) % 10;
+    return base + checkDigit;
+  }
+
   passwordInput.addEventListener('input', () => {
     if(passwordInput.value === correctPassword) {
+      generateBtn.disabled = false;
       errorDiv.textContent = '';
-      tokenInput.style.display = 'block';
-      generateBtn.style.display = 'block';
-      tokenInput.previousElementSibling.style.display = 'block'; // label表示
-      generateBtn.disabled = true;
-      resultDiv.textContent = '';
-      qrDiv.innerHTML = '';
     } else {
-      tokenInput.style.display = 'none';
-      generateBtn.style.display = 'none';
-      tokenInput.previousElementSibling.style.display = 'none';
-      errorDiv.textContent = passwordInput.value ? 'パスワードが違います' : '';
+      generateBtn.disabled = true;
+      if(passwordInput.value) {
+        errorDiv.textContent = 'パスワードが違います';
+      } else {
+        errorDiv.textContent = '';
+      }
       resultDiv.textContent = '';
       qrDiv.innerHTML = '';
     }
   });
 
-  // トークン入力のバリデーション
-  tokenInput.addEventListener('input', () => {
-    const val = tokenInput.value.trim();
-    generateBtn.disabled = !/^\d{8,}$/.test(val); // 8桁以上の数字だけ有効
-    errorDiv.textContent = '';
-  });
-
-  // 生成ボタン押下
   generateBtn.addEventListener('click', () => {
-    const token = tokenInput.value.trim();
-    const url = `https://nekomimi0128.github.io/tatata/customer?token=${encodeURIComponent(token)}`;
-
+    const token = generateLuhnToken(8);
+    const url = `https://nekomimi0128.github.io/tatata/customer?token=${token}`;
     resultDiv.textContent = url;
     qrDiv.innerHTML = '';
-    QRCode.toCanvas(qrDiv, url, { width: 180, color: { dark: '#d2691e', light: '#fff8f0' } }, function (error) {
-      if (error) {
+    QRCode.toCanvas(qrDiv, url, {
+      width: 180,
+      color: { dark: '#d2691e', light: '#fff8f0' }
+    }, (error) => {
+      if(error) {
         errorDiv.textContent = 'QRコード生成に失敗しました';
         console.error(error);
       }
