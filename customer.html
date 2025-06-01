@@ -1,129 +1,159 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Ta Ta Ta シフォンケーキ スタンプカード</title>
-<style>
-  body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-    background: #fff8f0;
-    color: #4b2e05;
-    max-width: 400px;
-    margin: 0 auto;
-    padding: 24px 16px;
-    user-select: none;
-  }
-  h1 {
-    text-align: center;
-    color: #d2691e;
-    margin-bottom: 24px;
-    font-weight: 700;
-  }
-  #stamps {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  .stamp {
-    width: 40px;
-    height: 40px;
-    border: 2px solid #d2691e;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    color: #d2691e;
-    background-color: #fff;
-    box-shadow: 0 0 5px rgba(210,105,30,0.3);
-  }
-  .stamp.filled {
-    background-color: #d2691e;
-    color: #fff;
-    box-shadow: 0 0 10px #d2691e;
-  }
-  #message {
-    text-align: center;
-    font-weight: 700;
-    margin-bottom: 16px;
-    color: #d2691e;
-    min-height: 24px;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ta Ta Ta スタンプカード</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', sans-serif;
+      background: #fff8f0;
+      color: #333;
+      padding: 20px;
+      max-width: 400px;
+      margin: auto;
+      user-select: none;
+    }
+    h1 {
+      text-align: center;
+      color: #d2691e;
+      margin-bottom: 24px;
+    }
+    #stamps {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .stamp {
+      width: 40px;
+      height: 40px;
+      border: 2px solid #d2691e;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: #d2691e;
+      background-color: #fff;
+      box-shadow: 0 0 5px rgba(210,105,30,0.3);
+    }
+    .stamp.filled {
+      background-color: #d2691e;
+      color: #fff;
+      box-shadow: 0 0 10px #d2691e;
+    }
+    #message {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 10px;
+      min-height: 24px;
+      color: #d2691e;
+    }
+    #resetButton {
+      display: none;
+      margin: auto;
+      padding: 10px 16px;
+      background-color: #d2691e;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      display: block;
+    }
+  </style>
 </head>
 <body>
-  <h1>Ta Ta Ta シフォンケーキ<br>スタンプカード</h1>
+  <h1>Ta Ta Ta<br>スタンプカード</h1>
   <div id="message"></div>
   <div id="stamps"></div>
+  <button id="resetButton" onclick="resetStamps()">スタンプをリセット</button>
 
-<script>
-  const MAX_STAMPS = 10;
+  <script>
+    const MAX_STAMPS = 10;
+    const stampKey = 'tata_stamps';
+    const usedTokensKey = 'tata_used_tokens';
 
-  // Luhnアルゴリズム検証関数
-  function checkLuhn(token) {
-    const digits = token.split('').map(Number);
-    let sum = 0;
-    let doubleFlag = false;
-    for(let i = digits.length - 1; i >= 0; i--) {
-      let val = digits[i];
-      if(doubleFlag) {
-        val *= 2;
-        if(val > 9) val -= 9;
+    let stamps = parseInt(localStorage.getItem(stampKey) || '0', 10);
+    let usedTokens = JSON.parse(localStorage.getItem(usedTokensKey) || '[]');
+
+    function renderStamps() {
+      const container = document.getElementById('stamps');
+      container.innerHTML = '';
+      for (let i = 1; i <= MAX_STAMPS; i++) {
+        const div = document.createElement('div');
+        div.className = 'stamp' + (i <= stamps ? ' filled' : '');
+        div.textContent = i <= stamps ? '★' : i;
+        container.appendChild(div);
       }
-      sum += val;
-      doubleFlag = !doubleFlag;
     }
-    return (sum % 10) === 0;
-  }
 
-  // クエリからtoken取得
-  function getTokenFromURL() {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('token') || '';
-  }
-
-  // スタンプ数をlocalStorageから取得（なければ0）
-  let stamps = parseInt(localStorage.getItem('tata_stamps') || '0', 10);
-
-  // スタンプ表示更新
-  function renderStamps() {
-    const container = document.getElementById('stamps');
-    container.innerHTML = '';
-    for(let i=1; i<=MAX_STAMPS; i++) {
-      const span = document.createElement('div');
-      span.className = 'stamp' + (i <= stamps ? ' filled' : '');
-      span.textContent = i <= stamps ? '★' : i;
-      container.appendChild(span);
+    function showMessage(msg) {
+      document.getElementById('message').textContent = msg;
     }
-  }
 
-  // メッセージ表示
-  function showMessage(msg) {
-    document.getElementById('message').textContent = msg;
-  }
-
-  // トークン検証して合格ならスタンプ追加
-  const token = getTokenFromURL();
-  if(token && token.length >= 8 && checkLuhn(token)) {
-    if(stamps < MAX_STAMPS) {
-      stamps++;
-      localStorage.setItem('tata_stamps', stamps);
-      showMessage('スタンプを1つ追加しました！');
-    } else {
-      showMessage('🎉 スタンプ10個でケーキ1つ無料！おめでとうございます！');
+    function resetStamps() {
+      if (confirm("スタンプをリセットしますか？")) {
+        stamps = 0;
+        usedTokens = [];
+        localStorage.setItem(stampKey, '0');
+        localStorage.setItem(usedTokensKey, JSON.stringify(usedTokens));
+        renderStamps();
+        showMessage('');
+        document.getElementById('resetButton').style.display = 'none';
+      }
     }
-  } else if(token) {
-    showMessage('無効なトークンです');
-  } else {
-    showMessage('');
-  }
 
-  renderStamps();
-</script>
+    function isValidToken(token) {
+      // Luhnアルゴリズム簡易実装
+      if (!/^\d{8}$/.test(token)) return false;
+      let sum = 0;
+      for (let i = 0; i < 8; i++) {
+        let n = parseInt(token[7 - i], 10);
+        if (i % 2 === 1) {
+          n *= 2;
+          if (n > 9) n -= 9;
+        }
+        sum += n;
+      }
+      return sum % 10 === 0;
+    }
 
+    function tryToken() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+      if (!token || !isValidToken(token)) return;
+
+      if (usedTokens.includes(token)) {
+        showMessage('このトークンはすでに使われています。');
+        return;
+      }
+
+      if (stamps < MAX_STAMPS) {
+        stamps += 1;
+        usedTokens.push(token);
+        localStorage.setItem(stampKey, stamps);
+        localStorage.setItem(usedTokensKey, JSON.stringify(usedTokens));
+        showMessage('🎉 スタンプが追加されました！');
+      }
+
+      if (stamps >= MAX_STAMPS) {
+        showMessage('🎉 スタンプ10個でケーキ1つ無料！');
+        document.getElementById('resetButton').style.display = 'block';
+      }
+
+      renderStamps();
+    }
+
+    renderStamps();
+    tryToken();
+
+    if (stamps >= MAX_STAMPS) {
+      document.getElementById('resetButton').style.display = 'block';
+      showMessage('🎉 スタンプ10個でケーキ1つ無料！');
+    }
+  </script>
 </body>
 </html>
