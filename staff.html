@@ -40,6 +40,7 @@
     #result {
       margin-top: 20px;
       font-weight: bold;
+      word-break: break-all;
     }
     #qr {
       margin-top: 15px;
@@ -57,17 +58,16 @@
   <div id="generator" style="display:none;">
     <button id="generateBtn">トークン生成</button>
     <div id="result"></div>
-    <div id="qr"></div>
+    <canvas id="qrCanvas"></canvas>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/kjua@0.1.1/kjua.min.js"></script>
   <script>
     const loginBtn = document.getElementById('loginBtn');
     const pwInput = document.getElementById('pw');
     const generatorDiv = document.getElementById('generator');
     const pwGroup = document.getElementById('pw-group');
     const resultDiv = document.getElementById('result');
-    const qrDiv = document.getElementById('qr');
+    const qrCanvas = document.getElementById('qrCanvas');
 
     const PASSWORD = '3187913';
 
@@ -99,23 +99,30 @@
       return base + checkDigit;
     }
 
+    function generateQRCode(text) {
+      const canvas = qrCanvas;
+      const ctx = canvas.getContext('2d');
+      canvas.width = 256;
+      canvas.height = 256;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const qr = new QRious({
+        element: canvas,
+        value: text,
+        size: 256,
+        level: 'H',
+        background: '#fff8f0',
+        foreground: '#d2691e'
+      });
+    }
+
     document.getElementById('generateBtn').addEventListener('click', () => {
       const token = generateLuhnToken(8);
       const url = `https://nekomimi0128.github.io/tatata/customer?token=${token}`;
       resultDiv.textContent = url;
-      qrDiv.innerHTML = '';
-      const qr = kjua({
-        text: url,
-        size: 200,
-        fill: '#d2691e',
-        back: '#fff8f0',
-        rounded: 30,
-        ecLevel: 'H',
-        render: 'canvas'
-      });
-      qrDiv.appendChild(qr);
+      generateQRCode(url);
     });
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
 </body>
 </html>
-
