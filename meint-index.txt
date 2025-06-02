@@ -1,45 +1,49 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8" />
-<title>メンテナンス告知</title>
-<style>
-  body {
-    font-family: sans-serif;
-    background: #fff8f0;
-    color: #d2691e;
-    text-align: center;
-    padding: 50px 20px;
-  }
-  #message {
-    font-size: 1.3rem;
-    margin-bottom: 30px;
-  }
-  button {
-    background: #d2691e;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    font-size: 1.1rem;
-    border-radius: 8px;
-    cursor: pointer;
-  }
-  button:hover {
-    background: #b55c17;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>メンテナンス中 | Ta Ta Ta</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', sans-serif;
+      background-color: #fff8f0;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: #d2691e;
+    }
+
+    p {
+      font-size: 1.1rem;
+      margin: 1em 0;
+    }
+
+    .icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 500px) {
+      h1 { font-size: 1.5rem; }
+      .icon { font-size: 3rem; }
+    }
+  </style>
 </head>
 <body>
-  <div id="message">
-    ⚠️【重要】6/2 18:00〜 メンテナンスのためサービス停止します。<br>
-    ご迷惑をおかけしますがご了承ください。
-  </div>
-  <button id="ok-btn">OK</button>
-
-  <script>
-    document.getElementById('ok-btn').addEventListener('click', () => {
-      window.location.href = 'https://nekomimi0128.github.io/tatata/customer'; // 移動先URLに変更してね
-    });
-  </script>
+  <div class="icon">🔧</div>
+  <h1>ただいまメンテナンス中です</h1>
+  <p>ご迷惑をおかけします。<br>
+  サービスは <strong> 一時停止しております。</p>
+  <p>しばらくしてからもう一度アクセスしてください。</p>
 </body>
 </html>
