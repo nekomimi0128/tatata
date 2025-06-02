@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ta Ta Ta スタッフ用トークン生成</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', sans-serif;
+      background-color: #fff8f0;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+    }
+    h1 {
+      color: #d2691e;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .input-group {
+      margin-bottom: 15px;
+    }
+    input {
+      padding: 8px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px 16px;
+      background-color: #d2691e;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #result {
+      margin-top: 20px;
+      font-weight: bold;
+      word-break: break-all;
+    }
+    #qr {
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Ta Ta Ta<br>スタンプ追加コード生成</h1>
+
+  <div class="input-group" id="pw-group">
+    <input type="password" id="pw" placeholder="パスコードを入力" />
+    <button id="loginBtn">ログイン</button>
+  </div>
+
+  <div id="generator" style="display:none;">
+    <button id="generateBtn">トークン生成</button>
+    <div id="result"></div>
+    <canvas id="qrCanvas"></canvas>
+  </div>
+
+  <script>
+    const loginBtn = document.getElementById('loginBtn');
+    const pwInput = document.getElementById('pw');
+    const generatorDiv = document.getElementById('generator');
+    const pwGroup = document.getElementById('pw-group');
+    const resultDiv = document.getElementById('result');
+    const qrCanvas = document.getElementById('qrCanvas');
+
+    const PASSWORD = '3187913';
+
+    loginBtn.addEventListener('click', () => {
+      if (pwInput.value === PASSWORD) {
+        generatorDiv.style.display = 'block';
+        pwGroup.style.display = 'none';
+      } else {
+        alert('パスコードが違います');
+      }
+    });
+
+    function generateLuhnToken(length) {
+      let base = '';
+      for (let i = 0; i < length - 1; i++) {
+        base += Math.floor(Math.random() * 10);
+      }
+      let sum = 0;
+      let reverse = base.split('').reverse();
+      for (let i = 0; i < reverse.length; i++) {
+        let n = parseInt(reverse[i]);
+        if (i % 2 === 0) {
+          n *= 2;
+          if (n > 9) n -= 9;
+        }
+        sum += n;
+      }
+      let checkDigit = (10 - (sum % 10)) % 10;
+      return base + checkDigit;
+    }
+
+    function generateQRCode(text) {
+      const canvas = qrCanvas;
+      const ctx = canvas.getContext('2d');
+      canvas.width = 256;
+      canvas.height = 256;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const qr = new QRious({
+        element: canvas,
+        value: text,
+        size: 256,
+        level: 'H',
+        background: '#fff8f0',
+        foreground: '#d2691e'
+      });
+    }
+
+    document.getElementById('generateBtn').addEventListener('click', () => {
+      const token = generateLuhnToken(8);
+      const url = `https://nekomimi0128.github.io/tatata/customer?token=${token}`;
+      resultDiv.textContent = url;
+      generateQRCode(url);
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+</body>
+</html>
