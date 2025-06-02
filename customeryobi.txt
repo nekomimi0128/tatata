@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ta Ta Ta スタンプカード</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      background: #fffdf8;
+      color: #333;
+      padding: 20px;
+      max-width: 420px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+      color: #d2691e;
+      margin-bottom: 16px;
+    }
+    #message {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 12px;
+      color: #d2691e;
+      min-height: 24px;
+    }
+    #stamps {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .stamp {
+      width: 40px;
+      height: 40px;
+      border: 2px solid #d2691e;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: #d2691e;
+      background-color: #fff;
+      box-shadow: 0 0 5px rgba(210,105,30,0.3);
+    }
+    .stamp.filled {
+      background-color: #d2691e;
+      color: #fff;
+      box-shadow: 0 0 10px #d2691e;
+    }
+    #resetButton {
+      display: none;
+      background: #d2691e;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 0 auto;
+      display: block;
+      margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+</div>
+<div style="height:40px;"></div> <!-- バナー分の余白確保 -->
+<h1>Ta Ta Ta スタンプカード</h1>
+  <div id="message"></div>
+  <div id="stamps"></div>
+  <button id="resetButton" onclick="resetStamps()">スタンプをリセット</button>
+
+  <script>
+    const MAX_STAMPS = 10;
+    const stampKey = 'tata_stamps';
+    const usedTokensKey = 'tata_used_tokens';
+
+    let stamps = parseInt(localStorage.getItem(stampKey) || '0', 10);
+    let usedTokens = JSON.parse(localStorage.getItem(usedTokensKey) || '[]');
+
+    function renderStamps() {
+      const container = document.getElementById('stamps');
+      container.innerHTML = '';
+      for (let i = 1; i <= MAX_STAMPS; i++) {
+        const div = document.createElement('div');
+        div.className = 'stamp' + (i <= stamps ? ' filled' : '');
+        div.textContent = i <= stamps ? '★' : i;
+        container.appendChild(div);
+      }
+    }
+
+    function showMessage(msg) {
+      document.getElementById('message').textContent = msg;
+    }
+
+    function luhnCheck(num) {
+      let sum = 0;
+      let shouldDouble = false;
+      for (let i = num.length - 1; i >= 0; i--) {
+        let digit = parseInt(num.charAt(i), 10);
+        if (shouldDouble) {
+          digit *= 2;
+          if (digit > 9) digit -= 9;
+        }
+        sum += digit;
+        shouldDouble = !shouldDouble;
+      }
+      return sum % 10 === 0;
+    }
+
+    function isValidToken(token) {
+      return /^\d{8}$/.test(token) && luhnCheck(token);
+    }
+
+    function tryToken() {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      if (!token || !isValidToken(token)) return;
+
+      if (usedTokens.includes(token)) {
+        showMessage('⚠️ このトークンはすでに使用されています。');
+        return;
+      }
+
+      if (stamps < MAX_STAMPS) {
+        stamps += 1;
+        usedTokens.push(token);
+        localStorage.setItem(stampKey, stamps);
+        localStorage.setItem(usedTokensKey, JSON.stringify(usedTokens));
+        showMessage('🎉 スタンプが追加されました！');
+      }
+
+      updateUI();
+    }
+
+    function resetStamps() {
+      stamps = 0;
+      usedTokens = [];
+      localStorage.setItem(stampKey, stamps);
+      localStorage.setItem(usedTokensKey, JSON.stringify(usedTokens));
+      updateUI();
+    }
+
+    function updateUI() {
+      renderStamps();
+      if (stamps >= MAX_STAMPS) {
+        showMessage('🎉 スタンプ10個でケーキ1つ無料！');
+        document.getElementById('resetButton').style.display = 'block';
+      } else {
+        document.getElementById('resetButton').style.display = 'none';
+      }
+    }
+
+    // 初期化
+    updateUI();
+    tryToken();
+  </script>
+</body>
+</html>
